@@ -13,6 +13,7 @@ Useful links:
 https://www.hivemq.com/blog/mqtt-essentials-part-10-alive-client-take-over/
 
 """
+import configparser
 import time
 
 import ttn
@@ -20,8 +21,13 @@ from ttn import MQTTClient
 
 
 def main():
-    app_id = "skybar-sensors"
-    access_key = "ttn-account-v2.92MjVAmyy6BeREmwjiQDOZ51TEGfC-JayoaCjlAtPqc"
+    ini_file_path = "../../config/temp-sensors.ini"
+    # The configuration file path will become a command-line argument
+    config = configparser.ConfigParser()
+    config.read(ini_file_path)
+    connection = config['ttn-explore.mqtt.connection']
+    app_id = connection['username']  # This is the Application ID for this integration at TTN
+    access_key = connection['password']  # This is the my-python-client application access key
 
     def uplink_callback(msg, client):
         print("Received uplink from ", msg.dev_id)

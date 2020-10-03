@@ -20,14 +20,20 @@ simplifies all the access stuff. It is perhaps a good way to get started, but ul
 make a lower-level MQTT client and navigate the access and get tokens and all so it can get the data
 directly from the MQTT broker.
 """
+import configparser
 import time
 
 import ttn
 
 
 def main():
-    app_id = "skybar-sensors"
-    access_key = "ttn-account-v2.92MjVAmyy6BeREmwjiQDOZ51TEGfC-JayoaCjlAtPqc"
+    ini_file_path = "../../config/temp-sensors.ini"
+    # The configuration file path will become a command-line argument
+    config = configparser.ConfigParser()
+    config.read(ini_file_path)
+    connection = config['ttn-explore.mqtt.connection']
+    app_id = connection['username']  # This is the Application ID for this integration at TTN
+    access_key = connection['password']  # This is the my-python-client application access key
 
     def uplink_callback(msg, client):
         print("Received uplink from ", msg.dev_id)
