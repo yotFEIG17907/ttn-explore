@@ -7,7 +7,8 @@ https://github.com/eclipse/paho.mqtt.python/blob/master/src/paho/
 import configparser
 
 # The path is relative to the sensors folder which is where this script is
-from src.sensors.mqtt_comms import MqttComms
+from src.sensors.db_streamer import Streamer
+from src.sensors.mqtt_comms import MqttComms, SensorListener
 
 mqtt_ca_path = "../../certs/mqtt-ca.pem"
 ini_file_path = "../../config/temp-sensors.ini"
@@ -34,11 +35,15 @@ If <DevID> is + then it will fetch all devices for the given application ID.
 
 #
 def main():
+
+    streamer = Streamer()
+
     comms = MqttComms(cert_path=mqtt_ca_path,
                       username=username,
                       password=password,
                       hostname=hostname,
-                      port=sslport)
+                      port=sslport,
+                      msg_listener=streamer)
 
     # Blocking call that keeps going until interrupted
     comms.connect_and_start(keep_alive_seconds=keep_alive_seconds)

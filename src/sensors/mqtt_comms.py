@@ -1,22 +1,49 @@
 """
 A class to wrap dealing with the MQTT broker
 """
+from abc import ABC, abstractmethod
+
 import paho.mqtt.client as mqtt
 
 
+class SensorListener(ABC):
+    """
+    An interface supported by an object that receives the payload from the messages
+    """
+    @abstractmethod
+    def on_message(self, topic: str, payload:str):
+        pass
+
+    @abstractmethod
+    def on_disconnect(self, reason: str):
+        pass
+
 class MqttComms:
+    """
+    A class that wraps the MQTT client and is an interface between
+    it and a listener that handles the messages
+    """
     client: mqtt.Client
     hostname: str
     ssl_port: int
+    msg_listener: SensorListener
 
-    def __init__(self, cert_path: str, username: str, password: str, hostname: str, port: int):
+    def __init__(self,
+                 cert_path: str,
+                 username: str,
+                 password: str,
+                 hostname: str,
+                 port: int,
+                 msg_listener: SensorListener = None):
         self.client = mqtt.Client()
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
+        self.client.on_disconnect = self.on_disconnect
         self.client.username_pw_set(username=username, password=password)
         self.client.tls_set(ca_certs=cert_path)
         self.hostname = hostname
         self.ssl_port = port
+        self.msg_listener = msg_listener
 
     def connect_and_start(self, keep_alive_seconds: int):
         self.client.connect(host=self.hostname, port=self.ssl_port, keepalive=keep_alive_seconds)
@@ -43,4 +70,10 @@ class MqttComms:
 
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self, client, userdata, msg):
-        print(msg.topic + " " + str(msg.payload))
+        if self.msg_listener is not None:
+            self.msg_listener.on_message(msg.topic, msg.payload)
+
+    def on_disconnect(self, client, userdata, rc):
+        print(f"Disconnected status {mqtt.error_string(rc)}")
+        if self.msg_listener is not None:
+            self.msg_listener.on_disconnect(mqtt.error_string(rc))
