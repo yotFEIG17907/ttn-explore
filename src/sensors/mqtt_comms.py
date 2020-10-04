@@ -11,7 +11,7 @@ class SensorListener(ABC):
     An interface supported by an object that receives the payload from the messages
     """
     @abstractmethod
-    def on_message(self, topic: str, payload:str):
+    def on_message(self, topic: bytes, payload:bytes):
         pass
 
     @abstractmethod
@@ -69,7 +69,7 @@ class MqttComms:
         print("Subscribed to messages for all devices")
 
     # The callback for when a PUBLISH message is received from the server.
-    def on_message(self, client, userdata, msg):
+    def on_message(self, client, userdata, msg: mqtt.MQTTMessage):
         if self.msg_listener is not None:
             self.msg_listener.on_message(msg.topic, msg.payload)
 

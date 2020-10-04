@@ -6,8 +6,8 @@ class Streamer(SensorListener):
     This receives the payload and stores it to the database
     """
 
-    def on_message(self, topic:str, payload: str):
-        print(topic, payload)
+    def on_message(self, topic:bytes, payload: bytes):
+        print(topic, payload.decode())
 
     def on_disconnect(self, reason: str):
         print(f"Upstream disconnected - {reason}")
