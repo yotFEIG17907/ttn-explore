@@ -7,8 +7,8 @@ https://github.com/eclipse/paho.mqtt.python/blob/master/src/paho/
 import configparser
 
 # The path is relative to the sensors folder which is where this script is
-from src.sensors.db_streamer import Streamer
-from src.sensors.mqtt_comms import MqttComms, SensorListener
+from sensors.db_streamer import Streamer
+from sensors.mqtt_comms import MqttComms, SensorListener
 
 mqtt_ca_path = "../../certs/mqtt-ca.pem"
 ini_file_path = "../../config/temp-sensors.ini"

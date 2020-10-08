@@ -1,4 +1,4 @@
-from src.sensors.mqtt_comms import SensorListener
+from sensors.mqtt_comms import SensorListener
 
 
 class Streamer(SensorListener):
