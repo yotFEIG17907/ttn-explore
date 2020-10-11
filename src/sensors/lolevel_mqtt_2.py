@@ -7,6 +7,9 @@ https://github.com/eclipse/paho.mqtt.python/blob/master/src/paho/
 import configparser
 
 # The path is relative to the sensors folder which is where this script is
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+
 from sensors.db_streamer import Streamer
 from sensors.mqtt_comms import MqttComms, SensorListener
 
@@ -36,7 +39,14 @@ If <DevID> is + then it will fetch all devices for the given application ID.
 #
 def main():
 
-    streamer = Streamer()
+    # Use an in-memory database to test
+    # Set this true to see all the SQL
+    sql_logging_on = False
+    engine = create_engine('sqlite:///:memory:', echo=sql_logging_on)
+    session_factory = sessionmaker(bind=engine)
+
+
+    streamer = Streamer(session_factory)
 
     comms = MqttComms(cert_path=mqtt_ca_path,
                       username=username,

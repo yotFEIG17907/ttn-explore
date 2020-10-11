@@ -1,22 +1,47 @@
+from typing import List
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from models.models import Base, TempHumidityMeasurement
+from models.models import Base, TempHumidityMeasurement, Sensor
 from sensors.db_streamer import Streamer
 from tests.testdata import test_periodic_msgs
-from utils.date_time_utils import get_utc_now, formatiso8601
+from utils.date_time_utils import get_utc_now
 
 
 def test_on_message():
     # The topic is somewhat made up but all the topics look similar to this
     # Different kind of messages on the same topic
     topic = "skybar-sensors/devices/sky-bar-chill-room/up"
-    streamer = Streamer()
+    # Use an in-memory database to test
+    # Set this true to see all the SQL
+    sql_logging_on = False
+    engine = create_engine('sqlite:///:memory:', echo=sql_logging_on)
+    Base.metadata.create_all(engine)
+    Session = sessionmaker(bind=engine)
+    streamer = Streamer(Session)
     counter = 0
     for msg in test_periodic_msgs:
         streamer.on_message(topic, msg)
         counter = counter + 1
     assert counter == len(test_periodic_msgs)
+    #
+    # Now query for the events and see what is there
+    session = Session()
+    try:
+        # Get the events
+        all_events = session.query(TempHumidityMeasurement).all()  # type: List[TempHumidityMeasurement]
+        assert len(all_events) == 3
+
+        # Get the sensors
+        all_sensors = session.query(Sensor).all()  # type: List[Sensor]
+        assert len(all_sensors) == 3
+        print()
+        for sensor in all_sensors:
+            print(sensor)
+            print(sensor.measurements.all())
+    finally:
+        session.close()
 
 
 def test_db_models():
@@ -28,13 +53,29 @@ def test_db_models():
     session = Session()
     Base.metadata.create_all(engine)
     timenow = get_utc_now()
-    measurement = TempHumidityMeasurement (temp_c=19.0, humidity=17, timestamp=timenow)
-    session.add(measurement)
-    session.commit()
+    device_id = "xkksjdfsf"
+    device_name = "My Test Device in the room"
+    sensor = Sensor(device_id=device_id, device_name=device_name)
+    try:
+        counter = 0
+        for temp_c in [x / 10.0 for x in range(150, 300, 5)]:
+            for humidity_percent in range(10, 40, 10):
+                measurement = TempHumidityMeasurement(sensor=sensor,
+                                                      temp_c=temp_c,
+                                                      humidity_percent=humidity_percent,
+                                                      timestamp=timenow)
+                session.add(measurement)
+                counter += 1
+        session.commit()
 
-    # Get the events
-    all_events = session.query(TempHumidityMeasurement).all() # type List[TempHumidityMeasurement]
-    assert len(all_events) > 0
-    print()
-    for event in all_events:
-        print(event)
+        # Get the events
+        all_events = session.query(TempHumidityMeasurement).all()  # type: List[TempHumidityMeasurement]
+        assert len(all_events) == counter
+
+        # Get the sensors
+        all_sensors = session.query(Sensor).all()  # type: List[Sensor]
+        assert len(all_sensors) == 1
+
+        assert len(all_sensors[0].measurements.all()) == counter
+    finally:
+        session.close()
