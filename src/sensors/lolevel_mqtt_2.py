@@ -13,9 +13,9 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from models.models import Base
 from sensors.db_streamer import Streamer
 from sensors.mqtt_comms import MqttComms
-
 
 """
 Topic format <AppID>/devices/<DevID>/up
@@ -27,11 +27,27 @@ If <DevID> is + then it will fetch all devices for the given application ID.
 """
 
 
+def str2bool(v):
+    if isinstance(v, bool):
+        return v
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
+
+
 def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="LoRA Data Feed")
     parser.add_argument("-l", "--log-config", required=True, help="Path to logging configuration file")
-    parser.add_argument("-i", "--ini-file", required=True, help="Path to the INI file for configuration the application")
+    parser.add_argument("-i", "--ini-file", required=True,
+                        help="Path to the INI file for configuration the application")
     parser.add_argument("-c", "--certs-file", required=True, help="Path to the MQTT trust store")
+    parser.add_argument("-db", "--db-url", required=True, help="Database connection URL, e.g. sqlite:///:memory:")
+    parser.add_argument("-v", "--verbose", required=False, help="SQL logging on or off, default is off",
+                        type=str2bool,
+                        default=False)
     args = parser.parse_args()
     return args
 
@@ -46,7 +62,12 @@ def main():
 
     log_folder = "target/logs"
     os.makedirs(log_folder, exist_ok=True)
+
+    data_folder = "target/data"
+    os.makedirs(data_folder, exist_ok=True)
+
     logging.config.fileConfig(logging_configuration, disable_existing_loggers=False)
+    logger = logging.getLogger("lora.mqtt")
 
     mqtt_ca_path = args.certs_file
     ini_file_path = args.ini_file
@@ -63,8 +84,11 @@ def main():
 
     # Use an in-memory database to test
     # Set this true to see all the SQL
-    sql_logging_on = False
-    engine = create_engine('sqlite:///:memory:', echo=sql_logging_on)
+    sql_logging_on = args.verbose
+    db_url = args.db_url
+    logger.info(f"Database URL for the ORM {db_url}")
+    engine = create_engine(db_url, echo=sql_logging_on)
+    Base.metadata.create_all(engine)
     session_factory = sessionmaker(bind=engine)
 
     streamer = Streamer(session_factory)
