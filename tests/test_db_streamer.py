@@ -21,24 +21,26 @@ def test_on_message():
     Session = sessionmaker(bind=engine)
     streamer = Streamer(Session)
     counter = 0
+    expected_periodic_msg_count = 4
+    expected_sensor_count = 3
     for msg in test_periodic_msgs:
         streamer.on_message(topic, msg)
         counter = counter + 1
-    assert counter == len(test_periodic_msgs)
+    assert counter == expected_periodic_msg_count
     #
     # Now query for the events and see what is there
     session = Session()
     try:
         # Get the events
         all_events = session.query(TempHumidityMeasurement).all()  # type: List[TempHumidityMeasurement]
-        assert len(all_events) == 3
+        assert len(all_events) == expected_periodic_msg_count
 
         # Get the sensors
         all_sensors = session.query(Sensor).all()  # type: List[Sensor]
-        assert len(all_sensors) == 3
+        assert len(all_sensors) == expected_sensor_count
         print()
         for sensor in all_sensors:
-            print(sensor)
+            print(sensor, len(sensor.measurements.all()))
             print(sensor.measurements.all())
     finally:
         session.close()
