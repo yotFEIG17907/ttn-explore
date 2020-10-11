@@ -1,4 +1,5 @@
 import json
+import logging
 from collections import namedtuple
 from contextlib import contextmanager
 
@@ -25,6 +26,7 @@ class Streamer(SensorListener):
 
     def __init__(self, Session):
         self.Session = scoped_session(Session)
+        self.logger = logging.getLogger("lora.mqtt")
 
     @contextmanager
     def session_scope(self):
@@ -47,7 +49,7 @@ class Streamer(SensorListener):
             temp_c = measurement.payload_fields.temp_c
             humidity_percent = measurement.payload_fields.humidity_percent
             timestamp = parseiso8601(measurement.metadata.time)
-            print(topic, f"dev_name {measurement.dev_id} dev_id {measurement.hardware_serial}")
+            self.logger.info(f"{topic} dev_name {measurement.dev_id} dev_id {measurement.hardware_serial}")
             with self.session_scope() as session:
                 # Make a new device if this one does not exist
                 sensor = session.query(Sensor).get(device_id)
@@ -60,4 +62,4 @@ class Streamer(SensorListener):
                 session.add(th_event)
 
     def on_disconnect(self, reason: str):
-        print(f"Upstream disconnected - {reason}")
+        self.logger.error(f"Upstream disconnected - {reason}")

@@ -4,27 +4,18 @@ TTN MQTT API Reference: https://www.thethingsnetwork.org/docs/applications/mqtt/
 This program uses Paho MQTT Client to make a SSL connection.  The source code for this client is here:
 https://github.com/eclipse/paho.mqtt.python/blob/master/src/paho/
 """
+import argparse
 import configparser
+import logging
+import logging.config
+import os
 
-# The path is relative to the sensors folder which is where this script is
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from sensors.db_streamer import Streamer
-from sensors.mqtt_comms import MqttComms, SensorListener
+from sensors.mqtt_comms import MqttComms
 
-mqtt_ca_path = "../../certs/mqtt-ca.pem"
-ini_file_path = "../../config/temp-sensors.ini"
-# The configuration file path will become a command-line argument
-config = configparser.ConfigParser()
-config.read(ini_file_path)
-connection = config['ttn-explore.mqtt.connection']
-username = connection['username']  # This is the Application ID for this integration at TTN
-password = connection['password']  # This is the my-python-client application access key
-region = connection['region']
-hostname = f"{region}.thethings.network"
-sslport = connection.getint('sslport')
-keep_alive_seconds = connection.getint('keep_alive_seconds')
 
 """
 Topic format <AppID>/devices/<DevID>/up
@@ -36,15 +27,45 @@ If <DevID> is + then it will fetch all devices for the given application ID.
 """
 
 
+def parse_arguments() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="LoRA Data Feed")
+    parser.add_argument("-l", "--log-config", required=True, help="Path to logging configuration file")
+    parser.add_argument("-i", "--ini-file", required=True, help="Path to the INI file for configuration the application")
+    parser.add_argument("-c", "--certs-file", required=True, help="Path to the MQTT trust store")
+    args = parser.parse_args()
+    return args
+
+
 #
 def main():
+    args = parse_arguments()
+    logging_configuration = args.log_config
+    if not os.path.exists(logging_configuration):
+        print("Path to logging configuration not found: ", logging_configuration)
+        return
+
+    log_folder = "target/logs"
+    os.makedirs(log_folder, exist_ok=True)
+    logging.config.fileConfig(logging_configuration, disable_existing_loggers=False)
+
+    mqtt_ca_path = args.certs_file
+    ini_file_path = args.ini_file
+    # The configuration file path will become a command-line argument
+    config = configparser.ConfigParser()
+    config.read(ini_file_path)
+    connection = config['ttn-explore.mqtt.connection']
+    username = connection['username']  # This is the Application ID for this integration at TTN
+    password = connection['password']  # This is the my-python-client application access key
+    region = connection['region']
+    hostname = f"{region}.thethings.network"
+    sslport = connection.getint('sslport')
+    keep_alive_seconds = connection.getint('keep_alive_seconds')
 
     # Use an in-memory database to test
     # Set this true to see all the SQL
     sql_logging_on = False
     engine = create_engine('sqlite:///:memory:', echo=sql_logging_on)
     session_factory = sessionmaker(bind=engine)
-
 
     streamer = Streamer(session_factory)
 

@@ -1,6 +1,7 @@
 """
 A class to wrap dealing with the MQTT broker
 """
+import logging
 from abc import ABC, abstractmethod
 
 import paho.mqtt.client as mqtt
@@ -44,6 +45,7 @@ class MqttComms:
         self.hostname = hostname
         self.ssl_port = port
         self.msg_listener = msg_listener
+        self.logger = logging.getLogger("lora.mqtt")
 
     def connect_and_start(self, keep_alive_seconds: int):
         self.client.connect(host=self.hostname, port=self.ssl_port, keepalive=keep_alive_seconds)
@@ -57,16 +59,16 @@ class MqttComms:
             self.client.loop_stop(force=True)
             self.client.disconnect()
         except Exception as e:
-            print(f"Some problem {str(e)})")
+            self.logger.warning(f"Some problem {str(e)})")
             self.client.loop_stop(force=True)
             self.client.disconnect()
 
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(self, client, userdata, flags, rc):
-        print("Connected with result code " + str(rc) + " " + mqtt.connack_string(rc))
+        self.logger.info("Connected with result code " + str(rc) + " " + mqtt.connack_string(rc))
         # subscribe for all devices of user
         client.subscribe('+/devices/+/up')
-        print("Subscribed to messages for all devices")
+        self.logger.info("Subscribed to messages for all devices")
 
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self, client, userdata, msg: mqtt.MQTTMessage):
@@ -74,6 +76,6 @@ class MqttComms:
             self.msg_listener.on_message(msg.topic, msg.payload)
 
     def on_disconnect(self, client, userdata, rc):
-        print(f"Disconnected status {mqtt.error_string(rc)}")
+        self.logger.warning(f"Disconnected status {mqtt.error_string(rc)}")
         if self.msg_listener is not None:
             self.msg_listener.on_disconnect(mqtt.error_string(rc))
