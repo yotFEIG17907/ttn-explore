@@ -3,9 +3,10 @@ import logging
 from collections import namedtuple
 from contextlib import contextmanager
 
-from sqlalchemy.orm import sessionmaker, scoped_session, Session
+from sqlalchemy.orm import scoped_session
 
 from models.models import Sensor, TempHumidityMeasurement
+from sensors.message_protocol import THSensorEventType, THSensorMsgType
 from sensors.mqtt_comms import SensorListener
 from utils.date_time_utils import parseiso8601
 
@@ -43,23 +44,34 @@ class Streamer(SensorListener):
 
     def on_message(self, topic: bytes, payload: bytes):
         measurement = json.loads(payload, object_hook=customMeasurementDecoder)
-        if measurement.payload_fields.event_type == "Periodic Report":
-            device_id = measurement.hardware_serial
-            device_name = measurement.dev_id
-            temp_c = measurement.payload_fields.temp_c
-            humidity_percent = measurement.payload_fields.humidity_percent
-            timestamp = parseiso8601(measurement.metadata.time)
-            self.logger.info(f"{topic} dev_name {measurement.dev_id} dev_id {measurement.hardware_serial}")
-            with self.session_scope() as session:
-                # Make a new device if this one does not exist
-                sensor = session.query(Sensor).get(device_id)
-                if sensor is None:
-                    sensor = Sensor(device_id=device_id, device_name=device_name)
-                th_event = TempHumidityMeasurement (temp_c=temp_c,
-                                                    humidity_percent=humidity_percent,
-                                                    timestamp=timestamp,
-                                                    sensor=sensor)
-                session.add(th_event)
+        # Temporary to gather more messages for testing
+        self.logger.info(payload.decode())
+        if measurement.payload_fields.msgtype == THSensorMsgType.SUPERVISORY.value:
+            # Supervisory message - it has no data
+            pass
+        elif measurement.payload_fields.msgtype == THSensorMsgType.UPLINK.value:
+            # Sensor event
+            if measurement.payload_fields.sensor_event_type == THSensorEventType.PERIODIC.value:
+                device_id = measurement.hardware_serial
+                device_name = measurement.dev_id
+                temp_c = measurement.payload_fields.temp_c
+                humidity_percent = measurement.payload_fields.humidity_percent
+                timestamp = parseiso8601(measurement.metadata.time)
+                with self.session_scope() as session:
+                    # Make a new device if this one does not exist
+                    sensor = session.query(Sensor).get(device_id)
+                    if sensor is None:
+                        sensor = Sensor(device_id=device_id, device_name=device_name)
+                    th_event = TempHumidityMeasurement(temp_c=temp_c,
+                                                       humidity_percent=humidity_percent,
+                                                       timestamp=timestamp,
+                                                       sensor=sensor)
+                    session.add(th_event)
+            else:
+                pass
+        else:
+            # Some other kind of message
+            pass
 
     def on_disconnect(self, reason: str):
         self.logger.error(f"Upstream disconnected - {reason}")
