@@ -3,7 +3,7 @@ This is the ORM mapping, it maps classes to tables using SQLAlchemy mapping
 """
 from datetime import timezone, datetime
 
-from sqlalchemy import types, Column, Integer, Float, String, ForeignKey
+from sqlalchemy import types, Column, Integer, Float, String, ForeignKey, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 
@@ -72,12 +72,15 @@ class TempHumidityMeasurement(Base):
     temp_c = Column(Float, nullable=False)
     humidity_percent = Column(Float, nullable=False)
     timestamp = Column(CustomDateTime, nullable=False)
+    counter = Column(Integer, nullable=False)
+    raw_message = Column(LargeBinary, nullable=False)
     sensor_id = Column(String(16), ForeignKey('sensor.device_id'))
     sensor = relationship("Sensor", back_populates="measurements")
 
     def __repr__(self):
-        return f"TempHumidityMeasurement(Device_ID={self.sensor.device_id}," \
-               f"Device_Name={self.sensor.device_name}," \
+        return f"TempHumidityMeasurement(Device_ID={self.sensor.device_id}, " \
+               f"Device_Name={self.sensor.device_name}, " \
+               f"Counter={self.counter}, " \
                f"Temp_C={self.temp_c}, " \
                f"Humidity_Percent={self.humidity_percent}, " \
                f"Timestamp={formatiso8601(self.timestamp)})"

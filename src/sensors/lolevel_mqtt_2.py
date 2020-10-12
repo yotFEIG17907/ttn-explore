@@ -3,6 +3,7 @@ TTN MQTT API Reference: https://www.thethingsnetwork.org/docs/applications/mqtt/
 
 This program uses Paho MQTT Client to make a SSL connection.  The source code for this client is here:
 https://github.com/eclipse/paho.mqtt.python/blob/master/src/paho/
+
 """
 import argparse
 import configparser
