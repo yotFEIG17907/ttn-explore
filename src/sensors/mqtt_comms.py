@@ -36,10 +36,13 @@ class MqttComms:
                  hostname: str,
                  port: int,
                  msg_listener: SensorListener = None):
-        self.client = mqtt.Client()
+        client_id = "kam-th-lora-10132020"
+        self.client = mqtt.Client(client_id=client_id, protocol=mqtt.MQTTv311, clean_session=False)
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
-        self.client.on_disconnect = self.on_disconnect
+        self.client.on_log = self.on_log
+        # See if leaving this as is will improve the re-connection
+        # self.client.on_disconnect = self.on_disconnect
         self.client.username_pw_set(username=username, password=password)
         self.client.tls_set(ca_certs=cert_path)
         self.hostname = hostname
@@ -66,9 +69,14 @@ class MqttComms:
     # The callback for when the client receives a CONNACK response from the server.
     def on_connect(self, client, userdata, flags, rc):
         self.logger.info("Connected with result code " + str(rc) + " " + mqtt.connack_string(rc))
-        # subscribe for all devices of user
-        client.subscribe('+/devices/+/up')
-        self.logger.info("Subscribed to messages for all devices")
+        if rc == 0:
+          # subscribe for all devices of user
+          res = client.subscribe('+/devices/+/up')
+          if res[0] != mqtt.MQTT_ERR_SUCCESS:
+              raise RuntimeError(f"Subscribe failed, the client is not really connected {res[0]}")
+          self.logger.info("Subscribed to messages for all devices")
+        else:
+            raise RuntimeError(f"Connection failed {str(rc)} {mqtt.connack_string(rc)}" )
 
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self, client, userdata, msg: mqtt.MQTTMessage):
@@ -79,3 +87,11 @@ class MqttComms:
         self.logger.warning(f"Disconnected status {mqtt.error_string(rc)}")
         if self.msg_listener is not None:
             self.msg_listener.on_disconnect(mqtt.error_string(rc))
+
+    def on_log(self, client, userdata, level, buf):
+        """
+        Log all MQTT protocol events, and the exceptions in callbacks
+        that have been caught by Paho.
+        """
+        logging_level = mqtt.LOGGING_LEVEL[level]
+        logging.log(logging_level, buf)

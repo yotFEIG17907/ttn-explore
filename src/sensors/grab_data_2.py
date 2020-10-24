@@ -44,7 +44,9 @@ def main():
     mqtt_client.connect()
     wait_seconds = 60 * 60 * 24
     print(f"Now wait for {wait_seconds} seconds after connect")
-    time.sleep(wait_seconds)
+    while True:
+      time.sleep(600)
+      print("Continue polling...")
     print("Close the client")
     mqtt_client.close()
 

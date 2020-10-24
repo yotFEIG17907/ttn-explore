@@ -5,7 +5,7 @@ from contextlib import contextmanager
 
 from sqlalchemy.orm import scoped_session
 
-from models.models import Sensor, TempHumidityMeasurement
+from models.models import Sensor, TempHumidityMeasurement, Supervisory
 from sensors.message_protocol import THSensorEventType, THSensorMsgType
 from sensors.mqtt_comms import SensorListener
 from utils.date_time_utils import parseiso8601
@@ -44,24 +44,35 @@ class Streamer(SensorListener):
 
     def on_message(self, topic: bytes, payload: bytes):
         try:
-            measurement = json.loads(payload, object_hook=customMeasurementDecoder)
+            msgobj = json.loads(payload, object_hook=customMeasurementDecoder)
             # Temporary to gather more messages for testing
             self.logger.info(payload.decode())
-            if measurement.payload_fields.msgtype == THSensorMsgType.SUPERVISORY.value:
-                # Supervisory message - it has no data
-                pass
-            elif measurement.payload_fields.msgtype == THSensorMsgType.UPLINK.value:
+            if msgobj.payload_fields.msgtype == THSensorMsgType.SUPERVISORY.value:
+                device_id = msgobj.hardware_serial
+                device_name = msgobj.dev_id
+                timestamp = parseiso8601(msgobj.metadata.time)
+                with self.session_scope() as session:
+                    # Make a new device if this one does not exist
+                    sensor = session.query(Sensor).get(device_id)
+                    if sensor is None:
+                        sensor = Sensor(device_id=device_id, device_name=device_name)
+                    th_event = Supervisory(timestamp=timestamp,
+                                           raw_message=payload,
+                                           counter=msgobj.counter,
+                                           sensor=sensor)
+                    session.add(th_event)
+            elif msgobj.payload_fields.msgtype == THSensorMsgType.UPLINK.value:
                 # Sensor event
-                if measurement.payload_fields.sensor_event_type == THSensorEventType.PERIODIC.value or \
-                        measurement.payload_fields.sensor_event_type == THSensorEventType.HMD_CHANGE_DECREASE.value or \
-                        measurement.payload_fields.sensor_event_type == THSensorEventType.HMD_CHANGE_INCREASE.value or \
-                        measurement.payload_fields.sensor_event_type == THSensorEventType.TEMP_CHANGE_DECREASE.value or \
-                        measurement.payload_fields.sensor_event_type == THSensorEventType.TEMP_CHANGE_INCREASE.value:
-                    device_id = measurement.hardware_serial
-                    device_name = measurement.dev_id
-                    temp_c = measurement.payload_fields.temp_c
-                    humidity_percent = measurement.payload_fields.humidity_percent
-                    timestamp = parseiso8601(measurement.metadata.time)
+                if msgobj.payload_fields.sensor_event_type == THSensorEventType.PERIODIC.value or \
+                        msgobj.payload_fields.sensor_event_type == THSensorEventType.HMD_CHANGE_DECREASE.value or \
+                        msgobj.payload_fields.sensor_event_type == THSensorEventType.HMD_CHANGE_INCREASE.value or \
+                        msgobj.payload_fields.sensor_event_type == THSensorEventType.TEMP_CHANGE_DECREASE.value or \
+                        msgobj.payload_fields.sensor_event_type == THSensorEventType.TEMP_CHANGE_INCREASE.value:
+                    device_id = msgobj.hardware_serial
+                    device_name = msgobj.dev_id
+                    temp_c = msgobj.payload_fields.temp_c
+                    humidity_percent = msgobj.payload_fields.humidity_percent
+                    timestamp = parseiso8601(msgobj.metadata.time)
                     with self.session_scope() as session:
                         # Make a new device if this one does not exist
                         sensor = session.query(Sensor).get(device_id)
@@ -71,12 +82,12 @@ class Streamer(SensorListener):
                                                            humidity_percent=humidity_percent,
                                                            timestamp=timestamp,
                                                            raw_message=payload,
-                                                           counter=measurement.counter,
+                                                           counter=msgobj.counter,
                                                            sensor=sensor)
                         session.add(th_event)
                 else:
                     self.logger.warning(f"Not one of the expected uplink messages" \
-                                     f"{measurement.payload_fields.sensor_event_type}")
+                                        f"{msgobj.payload_fields.sensor_event_type}")
                     pass
             else:
                 # Some other kind of message

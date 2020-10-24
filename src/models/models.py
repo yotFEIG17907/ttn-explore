@@ -56,6 +56,8 @@ class Sensor(Base):
     # it is better to add a query to get the ones you want rather than getting them all. And of
     # course this will be measurements only for this sensor.
     measurements = relationship("TempHumidityMeasurement", back_populates="sensor", lazy='dynamic')
+    # Stores the supervisory messages
+    supervisory = relationship("Supervisory", back_populates="sensor", lazy='dynamic')
 
     def __repr__(self):
         return f"Sensor(Device ID {self.device_id} Name {self.device_name})"
@@ -83,4 +85,24 @@ class TempHumidityMeasurement(Base):
                f"Counter={self.counter}, " \
                f"Temp_C={self.temp_c}, " \
                f"Humidity_Percent={self.humidity_percent}, " \
+               f"Timestamp={formatiso8601(self.timestamp)})"
+
+
+class Supervisory(Base):
+    """
+    Holds a single Supervisory message
+    """
+    __tablename__ = 'supervis'
+
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(CustomDateTime, nullable=False)
+    counter = Column(Integer, nullable=False)
+    raw_message = Column(LargeBinary, nullable=False)
+    sensor_id = Column(String(16), ForeignKey('sensor.device_id'))
+    sensor = relationship("Sensor", back_populates="supervisory")
+
+    def __repr__(self):
+        return f"Supervisory(Device_ID={self.sensor.device_id}, " \
+               f"Device_Name={self.sensor.device_name}, " \
+               f"Counter={self.counter}, " \
                f"Timestamp={formatiso8601(self.timestamp)})"

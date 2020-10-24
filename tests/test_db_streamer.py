@@ -45,6 +45,7 @@ def test_on_message():
         for sensor in all_sensors:
             print(sensor, len(sensor.measurements.all()))
             print(sensor.measurements.all())
+            print(sensor.supervisory.all())
     finally:
         session.close()
 
@@ -86,5 +87,7 @@ def test_db_models():
         assert len(all_sensors) == 1
 
         assert len(all_sensors[0].measurements.all()) == counter
+        # Check the supervisor messages, there are none as yet
+        assert len(all_sensors[0].supervisory.all()) == 0
     finally:
         session.close()
