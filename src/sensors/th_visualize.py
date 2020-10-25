@@ -1,21 +1,21 @@
 """
-This pulls events from the database, sorts them by device id and counter and then looks for gaps
-the sequence which could indicate missing messages. Not working, this finds small gaps periodically
-which are due to the Supervisory messages.
-
+Visualize the temperature data
 """
 import argparse
 import configparser
 import logging
 import logging.config
 import os
-from typing import List
+from collections import defaultdict
+from time import sleep
 
-from sqlalchemy import create_engine
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 
-from models.models import Base, Sensor, TempHumidityMeasurement
-from utils.date_time_utils import formatiso8601
+from models.models import Base, Sensor
 
 
 def str2bool(v):
@@ -42,6 +42,26 @@ def parse_arguments() -> argparse.Namespace:
     return args
 
 
+def query_to_list(rset):
+    """List of result
+    Return: columns name, list of result
+    """
+    result = []
+    for obj in rset:
+        instance = inspect(obj)
+        items = instance.attrs.items()
+        result.append([x.value for _,x in items])
+    return instance.attrs.keys(), result
+
+def query_to_dict(rset):
+    result = defaultdict(list)
+    for obj in rset:
+        instance = inspect(obj)
+        for key, x in instance.attrs.items():
+            result[key].append(x.value)
+    return result
+
+
 #
 def main():
     args = parse_arguments()
@@ -50,7 +70,7 @@ def main():
         print("Path to logging configuration not found: ", logging_configuration)
         return
 
-    log_folder = "target/logs"
+    log_folder = "target/viz-logs"
     os.makedirs(log_folder, exist_ok=True)
 
     logging.config.fileConfig(logging_configuration, disable_existing_loggers=False)
@@ -73,28 +93,22 @@ def main():
     # Need to look at both Temperature and Supervisory messages
     session = session_factory()
     try:
+        plt.figure()
         all_sensors = session.query(Sensor).all()
         for sensor in all_sensors:
             logger.info(sensor)
-            all_th_events = sensor.measurements.order_by(
-                TempHumidityMeasurement.counter).all()  # type: List[TempHumidityMeasurement]
-            logger.info(f"  There are {len(all_th_events)} events")
-            logger.info(f"  Lowest Counter {all_th_events[0].counter} Latest Counter {all_th_events[-1].counter}")
-            logger.info(f"  First time {formatiso8601(all_th_events[0].timestamp)}" \
-                        f"  Last time {formatiso8601(all_th_events[-1].timestamp)}")
-            # Look for gaps
-            mru_event = all_th_events[0]
-            start_good_run = mru_event
-            for event in all_th_events:
-                if event.counter > mru_event.counter + 1:
-                    gap = event.counter - mru_event.counter
-                    good_run = mru_event.counter - start_good_run.counter
-                    logger.warning(
-                        f"Gap {gap} > 1 Run before this gap {good_run}, {mru_event.counter} / {formatiso8601(mru_event.timestamp)}" \
-                        f" {event.counter} / {formatiso8601(event.timestamp)}")
-                    start_good_run = event
-                mru_event = event
-
+            names, data = query_to_list(sensor.measurements.all())
+            df2 = pd.DataFrame.from_records(data, columns=names)
+            x = df2['timestamp']
+            y1 = df2['temp_c']
+            plt.plot(x,y1,label=f"{sensor.device_name} ({sensor.device_id})")
+        # Need to call plt.show() to cause the plots to display
+        # In PyCharm a window will open to show them
+        plt.xlabel('Date/Time')
+        plt.ylabel('Temp Deg C')
+        plt.xticks(rotation=90)
+        plt.legend()
+        plt.show()
     finally:
         session.close()
 

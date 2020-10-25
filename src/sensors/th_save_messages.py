@@ -1,21 +1,19 @@
 """
-This pulls events from the database, sorts them by device id and counter and then looks for gaps
-the sequence which could indicate missing messages. Not working, this finds small gaps periodically
-which are due to the Supervisory messages.
-
+This pulls events from the database, and writes the wrong messages to a file for
+subsequent use in testing.
 """
 import argparse
 import configparser
 import logging
 import logging.config
 import os
+from pathlib import Path
 from typing import List
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from models.models import Base, Sensor, TempHumidityMeasurement
-from utils.date_time_utils import formatiso8601
+from models.models import Base, Sensor, TempHumidityMeasurement, Supervisory
 
 
 def str2bool(v):
@@ -35,6 +33,7 @@ def parse_arguments() -> argparse.Namespace:
     parser.add_argument("-i", "--ini-file", required=True,
                         help="Path to the INI file for configuration the application")
     parser.add_argument("-db", "--db-url", required=True, help="Database connection URL, e.g. sqlite:///:memory:")
+    parser.add_argument("-o", "--output-file", required=True, help="Raw messages will be written to this file")
     parser.add_argument("-v", "--verbose", required=False, help="SQL logging on or off, default is off",
                         type=str2bool,
                         default=False)
@@ -56,6 +55,10 @@ def main():
     logging.config.fileConfig(logging_configuration, disable_existing_loggers=False)
     logger = logging.getLogger("event.validator")
 
+    out_file_path = Path(args.output_file)
+    os.makedirs(out_file_path.parent, exist_ok=True)
+    logger.info(f"Messages will be written to {out_file_path}")
+
     ini_file_path = args.ini_file
     # The configuration file path will become a command-line argument
     config = configparser.ConfigParser()
@@ -73,27 +76,14 @@ def main():
     # Need to look at both Temperature and Supervisory messages
     session = session_factory()
     try:
-        all_sensors = session.query(Sensor).all()
-        for sensor in all_sensors:
-            logger.info(sensor)
-            all_th_events = sensor.measurements.order_by(
-                TempHumidityMeasurement.counter).all()  # type: List[TempHumidityMeasurement]
-            logger.info(f"  There are {len(all_th_events)} events")
-            logger.info(f"  Lowest Counter {all_th_events[0].counter} Latest Counter {all_th_events[-1].counter}")
-            logger.info(f"  First time {formatiso8601(all_th_events[0].timestamp)}" \
-                        f"  Last time {formatiso8601(all_th_events[-1].timestamp)}")
-            # Look for gaps
-            mru_event = all_th_events[0]
-            start_good_run = mru_event
-            for event in all_th_events:
-                if event.counter > mru_event.counter + 1:
-                    gap = event.counter - mru_event.counter
-                    good_run = mru_event.counter - start_good_run.counter
-                    logger.warning(
-                        f"Gap {gap} > 1 Run before this gap {good_run}, {mru_event.counter} / {formatiso8601(mru_event.timestamp)}" \
-                        f" {event.counter} / {formatiso8601(event.timestamp)}")
-                    start_good_run = event
-                mru_event = event
+        with open(out_file_path, "w") as writer:
+            measurements = session.query(TempHumidityMeasurement).\
+                order_by(TempHumidityMeasurement.counter).all() # type: List[TempHumidityMeasurement]
+            messages = [x.raw_message.decode("utf-8") + '\n' for x in measurements]
+            writer.writelines(messages)
+            supervisory = session.query(Supervisory).order_by(Supervisory.counter).all()
+            s_messages = [x.raw_message.decode("utf-8") + '\n' for x in supervisory]
+            writer.writelines(s_messages)
 
     finally:
         session.close()
