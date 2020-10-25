@@ -14,7 +14,7 @@ from typing import List
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from models.models import Base, Sensor, TempHumidityMeasurement
+from models.models import Base, Sensor, LoraEvent
 from utils.date_time_utils import formatiso8601
 
 
@@ -76,8 +76,8 @@ def main():
         all_sensors = session.query(Sensor).all()
         for sensor in all_sensors:
             logger.info(sensor)
-            all_th_events = sensor.measurements.order_by(
-                TempHumidityMeasurement.counter).all()  # type: List[TempHumidityMeasurement]
+            all_th_events = sensor.events.order_by(
+                LoraEvent.counter).all()  # type: List[LoraEvent]
             logger.info(f"  There are {len(all_th_events)} events")
             logger.info(f"  Lowest Counter {all_th_events[0].counter} Latest Counter {all_th_events[-1].counter}")
             logger.info(f"  First time {formatiso8601(all_th_events[0].timestamp)}" \
@@ -90,7 +90,8 @@ def main():
                     gap = event.counter - mru_event.counter
                     good_run = mru_event.counter - start_good_run.counter
                     logger.warning(
-                        f"Gap {gap} > 1 Run before this gap {good_run}, {mru_event.counter} / {formatiso8601(mru_event.timestamp)}" \
+                        f"Gap {gap} > 1 Run before this gap {good_run}, "\
+                        f"{mru_event.counter} / {formatiso8601(mru_event.timestamp)}" \
                         f" {event.counter} / {formatiso8601(event.timestamp)}")
                     start_good_run = event
                 mru_event = event

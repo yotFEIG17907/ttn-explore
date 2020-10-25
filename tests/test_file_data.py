@@ -4,7 +4,7 @@ from typing import List
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from models.models import Base, TempHumidityMeasurement, Sensor, Supervisory
+from models.models import Base, TempHumidityMeasurement, Sensor, Supervisory, LoraEvent
 from sensors.db_streamer import Streamer
 
 
@@ -27,7 +27,7 @@ def test_on_message():
     expected_hmd_change_count = 2
     expected_sup_count = expected_mixed_msg_count - expected_periodic_msg_count \
                          - expected_hmd_change_count
-    expected_event_count = expected_periodic_msg_count + expected_hmd_change_count
+    expected_measurement_count = expected_periodic_msg_count + expected_hmd_change_count
     expected_sensor_count = 3
 
     with open(test_data_path, "r") as reader:
@@ -39,15 +39,29 @@ def test_on_message():
     # Now query for the events and see what is there
     session = Session()
     try:
-        # Get the events
-        all_events = session.query(TempHumidityMeasurement) \
+        all_events = session.query(LoraEvent).all()  # type: List[LoraEvent]
+        assert len(all_events) == expected_mixed_msg_count
+
+        # Get the measurements
+        all_measurements = session.query(TempHumidityMeasurement) \
             .all()  # type: List[TempHumidityMeasurement]
-        assert len(all_events) == expected_event_count
+        assert len(all_measurements) == expected_measurement_count
+        # Check supervisory
+        all_sup = session.query(Supervisory).all()  # type: List[Supervisory]
+        assert len(all_sup) == expected_sup_count
         # Get the sensors
         all_sensors = session.query(Sensor).all()  # type: List[Sensor]
         assert len(all_sensors) == expected_sensor_count
-        # Check supervisory
-        all_sup = session.query(Supervisory).all()
-        assert len(all_sup) == expected_sup_count
+
+        # Get the sum of measurements and supervisory
+        meas_count = 0
+        sup_count = 0
+        for sensor in all_sensors:
+            meas_count = meas_count + len(sensor.measurements.all())
+            sup_count = sup_count + len(sensor.supervisory.all())
+        assert meas_count == expected_measurement_count
+        assert sup_count == expected_sup_count
+
+
     finally:
         session.close()

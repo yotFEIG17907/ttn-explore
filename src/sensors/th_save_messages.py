@@ -13,7 +13,7 @@ from typing import List
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from models.models import Base, Sensor, TempHumidityMeasurement, Supervisory
+from models.models import Base, LoraEvent
 
 
 def str2bool(v):
@@ -77,13 +77,10 @@ def main():
     session = session_factory()
     try:
         with open(out_file_path, "w") as writer:
-            measurements = session.query(TempHumidityMeasurement).\
-                order_by(TempHumidityMeasurement.counter).all() # type: List[TempHumidityMeasurement]
+            measurements = session.query(LoraEvent). \
+                order_by(LoraEvent.counter).all()  # type: List[LoraEvent]
             messages = [x.raw_message.decode("utf-8") + '\n' for x in measurements]
             writer.writelines(messages)
-            supervisory = session.query(Supervisory).order_by(Supervisory.counter).all()
-            s_messages = [x.raw_message.decode("utf-8") + '\n' for x in supervisory]
-            writer.writelines(s_messages)
 
     finally:
         session.close()
