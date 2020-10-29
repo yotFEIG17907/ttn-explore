@@ -62,6 +62,7 @@ class Sensor(Base):
     events = relationship("LoraEvent", back_populates="sensor", lazy='dynamic')
     measurements = relationship("TempHumidityMeasurement", back_populates="sensor", lazy='dynamic')
     supervisory = relationship("Supervisory", back_populates="sensor", lazy='dynamic')
+    linkq = relationship("LinkQ", back_populates="sensor", lazy='dynamic')
 
     def __repr__(self):
         return f"Sensor(Device ID {self.device_id} Name {self.device_name})"
@@ -125,6 +126,22 @@ class Supervisory(LoraEvent):
 
     def __repr__(self):
         return f"Supervisory(Device_ID={self.sensor.device_id}, " \
+               f"Device_Name={self.sensor.device_name}, " \
+               f"Counter={self.counter}, " \
+               f"Timestamp={formatiso8601(self.timestamp)})"
+
+
+class LinkQ(LoraEvent):
+    """
+    Holds a single Supervisory message
+    """
+
+    __mapper_args__ = {
+        'polymorphic_identity': 'linkq'
+    }
+
+    def __repr__(self):
+        return f"LinkQ(Device_ID={self.sensor.device_id}, " \
                f"Device_Name={self.sensor.device_name}, " \
                f"Counter={self.counter}, " \
                f"Timestamp={formatiso8601(self.timestamp)})"
