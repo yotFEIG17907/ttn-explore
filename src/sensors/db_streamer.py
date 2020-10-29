@@ -5,7 +5,7 @@ from contextlib import contextmanager
 
 from sqlalchemy.orm import scoped_session
 
-from models.models import Sensor, TempHumidityMeasurement, Supervisory
+from models.models import Sensor, TempHumidityMeasurement, Supervisory, LinkQ
 from sensors.message_protocol import THSensorEventType, THSensorMsgType
 from sensors.mqtt_comms import SensorListener
 from utils.date_time_utils import parseiso8601
@@ -57,6 +57,20 @@ class Streamer(SensorListener):
                     if sensor is None:
                         sensor = Sensor(device_id=device_id, device_name=device_name)
                     th_event = Supervisory(timestamp=timestamp,
+                                           raw_message=payload,
+                                           counter=msgobj.counter,
+                                           sensor=sensor)
+                    session.add(th_event)
+            elif msgobj.payload_fields.msgtype == THSensorMsgType.LINK_QUALITY.value:
+                device_id = msgobj.hardware_serial
+                device_name = msgobj.dev_id
+                timestamp = parseiso8601(msgobj.metadata.time)
+                with self.session_scope() as session:
+                    # Make a new device if this one does not exist
+                    sensor = session.query(Sensor).get(device_id)
+                    if sensor is None:
+                        sensor = Sensor(device_id=device_id, device_name=device_name)
+                    th_event = LinkQ(timestamp=timestamp,
                                            raw_message=payload,
                                            counter=msgobj.counter,
                                            sensor=sensor)
