@@ -10,13 +10,16 @@ class THSensorMsgType(Enum):
     https://radiobridge.com/documents/Common%20Sensor%20Messages.pdf
     """
     # These message types are common to all RadioBridge sensors
+    # These are values that show up in the msgtype field of the
+    # payload fields but note that the payload_fields are put there
+    # by the formatting code that I put into the Things Network
     RESET = 0, "Reset"
     SUPERVISORY = 1, "Supervisory"
     TAMPER = 2, "Tamper Event has occurred"
     LINK_QUALITY = 0xFB, "Link Quality sent after each downlink configuration change"
     ACK = 0xFE, "Downlink message acknowledgement"
     # These are specific to the Temperature-Humidity Sensors
-    UPLINK = 0x0D, "Temperature Event"
+    UPLINK = 0x0D, "Uplink Message"
 
     def __new__(cls, value: int, desc: str):
         member = object.__new__(cls)
@@ -38,7 +41,8 @@ class THSensorMsgType(Enum):
 class THSensorEventType(Enum):
     """
     Enumerates values for the various sensor measurement events,
-    this is when msgtype field indicates this is a sensor event.
+    this is when msgtype field indicates this is an uplink event.
+    These values are in the sensor_event_type field of the Uplink message
     Illustrates yet another way to create an enum with atttributes
     """
 

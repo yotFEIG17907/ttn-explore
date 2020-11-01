@@ -14,7 +14,7 @@ from typing import List
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from models.models import Base, Sensor, LoraEvent
+from models.models import Base, Sensor, LoraEvent, ConnectionEvent
 from utils.date_time_utils import formatiso8601
 
 
@@ -95,6 +95,9 @@ def main():
                         f" {event.counter} / {formatiso8601(event.timestamp)}")
                     start_good_run = event
                 mru_event = event
+        all_connection_events = session.query(ConnectionEvent).all()
+        for con_event in all_connection_events:
+            logger.info(con_event)
 
     finally:
         session.close()

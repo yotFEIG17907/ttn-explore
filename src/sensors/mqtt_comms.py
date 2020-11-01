@@ -11,12 +11,22 @@ class SensorListener(ABC):
     """
     An interface supported by an object that receives the payload from the messages
     """
+
     @abstractmethod
-    def on_message(self, topic: bytes, payload:bytes):
+    def on_message(self, topic: bytes, payload: bytes):
         pass
 
     @abstractmethod
     def on_disconnect(self, reason: str):
+        pass
+
+    @abstractmethod
+    def on_connection_event(self, reason: str) -> None:
+        """
+        Notifies the Sensor Listener of connection related events
+        :param reason: Human readable and parseable text describing the event
+        :return: None
+        """
         pass
 
 class MqttComms:
@@ -38,11 +48,12 @@ class MqttComms:
                  msg_listener: SensorListener = None):
         client_id = "kam-th-lora-10132020"
         self.client = mqtt.Client(client_id=client_id, protocol=mqtt.MQTTv311, clean_session=False)
+        # Connect the client's callback functions to the methods in this class
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.client.on_log = self.on_log
         # See if leaving this as is will improve the re-connection
-        # self.client.on_disconnect = self.on_disconnect
+        self.client.on_disconnect = self.on_disconnect
         self.client.username_pw_set(username=username, password=password)
         self.client.tls_set(ca_certs=cert_path)
         self.hostname = hostname
@@ -70,23 +81,31 @@ class MqttComms:
     def on_connect(self, client, userdata, flags, rc):
         self.logger.info("Connected with result code " + str(rc) + " " + mqtt.connack_string(rc))
         if rc == 0:
-          # subscribe for all devices of user
-          res = client.subscribe('+/devices/+/up')
-          if res[0] != mqtt.MQTT_ERR_SUCCESS:
-              raise RuntimeError(f"Subscribe failed, the client is not really connected {res[0]}")
-          self.logger.info("Subscribed to messages for all devices")
+            # subscribe for all devices of user
+            res = client.subscribe('+/devices/+/up')
+            if res[0] != mqtt.MQTT_ERR_SUCCESS:
+                raise RuntimeError(f"Subscribe failed, the client is not really connected {res[0]}")
+            msg = "Subscribed to messages for all devices"
+            self.logger.info(msg)
+            self.msg_listener.on_connection_event(msg)
         else:
-            raise RuntimeError(f"Connection failed {str(rc)} {mqtt.connack_string(rc)}" )
+            msg = f"Connection failed {str(rc)} {mqtt.connack_string(rc)}"
+            self.msg_listener.on_connection_event(msg)
+            raise RuntimeError(msg)
 
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self, client, userdata, msg: mqtt.MQTTMessage):
         if self.msg_listener is not None:
             self.msg_listener.on_message(msg.topic, msg.payload)
 
+    # The callback for when a disconnect message is received regarding the mqtt connection.
     def on_disconnect(self, client, userdata, rc):
-        self.logger.warning(f"Disconnected status {mqtt.error_string(rc)}")
+        msg = f"Disconnected status {mqtt.error_string(rc)}"
+        self.logger.warning(msg)
         if self.msg_listener is not None:
+            msg = mqtt.error_string(rc)
             self.msg_listener.on_disconnect(mqtt.error_string(rc))
+            self.msg_listener.on_connection_event(msg)
 
     def on_log(self, client, userdata, level, buf):
         """
@@ -95,3 +114,4 @@ class MqttComms:
         """
         logging_level = mqtt.LOGGING_LEVEL[level]
         logging.log(logging_level, buf)
+        self.msg_listener.on_connection_event(buf)

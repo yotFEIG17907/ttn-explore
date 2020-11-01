@@ -5,10 +5,10 @@ from contextlib import contextmanager
 
 from sqlalchemy.orm import scoped_session
 
-from models.models import Sensor, TempHumidityMeasurement, Supervisory, LinkQ
+from models.models import Sensor, TempHumidityMeasurement, Supervisory, LinkQ, ConnectionEvent, ConnectEnum
 from sensors.message_protocol import THSensorEventType, THSensorMsgType
 from sensors.mqtt_comms import SensorListener
-from utils.date_time_utils import parseiso8601
+from utils.date_time_utils import parseiso8601, get_utc_now
 
 
 def customMeasurementDecoder(measurementDict):
@@ -71,9 +71,9 @@ class Streamer(SensorListener):
                     if sensor is None:
                         sensor = Sensor(device_id=device_id, device_name=device_name)
                     th_event = LinkQ(timestamp=timestamp,
-                                           raw_message=payload,
-                                           counter=msgobj.counter,
-                                           sensor=sensor)
+                                     raw_message=payload,
+                                     counter=msgobj.counter,
+                                     sensor=sensor)
                     session.add(th_event)
             elif msgobj.payload_fields.msgtype == THSensorMsgType.UPLINK.value:
                 # Sensor event
@@ -112,3 +112,18 @@ class Streamer(SensorListener):
 
     def on_disconnect(self, reason: str):
         self.logger.error(f"Upstream disconnected - {reason}")
+
+    def on_connection_event(self, reason: str) -> None:
+        """
+        Save this as a generic ConnectionEvent to the database
+        :param reason: The text of the event
+        :return: None
+        """
+        with self.session_scope() as session:
+            # Make a connection event message to save
+            # Right now the kind of Generic, not bothering to parse
+            # the reason to figure out what kind of event it is, will add
+            # this later
+            timenow = get_utc_now()
+            event = ConnectionEvent(timestamp=timenow, kind=ConnectEnum.GENERIC, desc=reason)
+            session.add(event)

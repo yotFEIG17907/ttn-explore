@@ -3,7 +3,7 @@ from typing import List
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from models.models import Base, TempHumidityMeasurement, Sensor, LoraEvent
+from models.models import Base, TempHumidityMeasurement, Sensor, LoraEvent, ConnectEnum, ConnectionEvent
 from sensors.db_streamer import Streamer
 from tests.testdata import test_mixed_msgs
 from utils.date_time_utils import get_utc_now
@@ -91,5 +91,30 @@ def test_db_models():
         assert len(all_sensors) == 1
 
         assert len(all_sensors[0].events.all()) == counter
+    finally:
+        session.close()
+
+
+def test_db_connection_event():
+    # This will test creation and retrieval of a ConnectionEvent
+    # Use an in-memory database to test
+    # Set this true to see all the SQL
+    sql_logging_on = False
+    engine = create_engine('sqlite:///:memory:', echo=sql_logging_on)
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    Base.metadata.create_all(engine)
+    timenow = get_utc_now()
+    kind = ConnectEnum.CONNECTED
+    desc = "Connected Message"
+    try:
+        event = ConnectionEvent(timestamp=timenow, kind=kind, desc=desc)
+        session.add(event)
+        session.commit()
+
+        # Get the event
+        all_events = session.query(ConnectionEvent).all()  # type: List[ConnectionEvent]
+        assert len(all_events) == 1
+
     finally:
         session.close()

@@ -3,11 +3,13 @@ This is the ORM mapping, it maps classes to tables using SQLAlchemy mapping
 The message classes form a hierarchy. This is mapped to the database using
 "Single Table Inheritance" described here: https://docs.sqlalchemy.org/en/13/orm/inheritance.html
 """
+from enum import Enum
 from datetime import timezone, datetime
 
 from sqlalchemy import types, Column, Integer, Float, String, ForeignKey, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
+from sqlalchemy.types import Enum as SQLAlchemyEnumType
 
 from utils.date_time_utils import formatiso8601
 
@@ -35,6 +37,27 @@ class CustomDateTime(types.TypeDecorator):
 
 
 Base = declarative_base()
+
+
+class ConnectEnum(Enum):
+    CONNECTED = 1
+    SOCKER_ERROR = 2
+    GENERIC = 3
+
+
+class ConnectionEvent(Base):
+    """
+    Stores connect and disconnect events
+    """
+    __tablename__ = 'connection'
+
+    id = Column(Integer, primary_key=True)
+    timestamp = Column(CustomDateTime, nullable=False)
+    kind = Column(SQLAlchemyEnumType(ConnectEnum), nullable=False)
+    desc = Column(String(32), nullable=False)
+
+    def __repr__(self):
+        return f"ConnectionEvent(Timestamp={formatiso8601(self.timestamp)} Kind {self.kind} - {self.desc})"
 
 
 class Sensor(Base):
