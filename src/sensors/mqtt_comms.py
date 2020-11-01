@@ -100,9 +100,12 @@ class MqttComms:
 
     # The callback for when a disconnect message is received regarding the mqtt connection.
     def on_disconnect(self, client, userdata, rc):
-        self.logger.warning(f"Disconnected status {mqtt.error_string(rc)}")
+        msg = f"Disconnected status {mqtt.error_string(rc)}"
+        self.logger.warning(msg)
         if self.msg_listener is not None:
+            msg = mqtt.error_string(rc)
             self.msg_listener.on_disconnect(mqtt.error_string(rc))
+            self.msg_listener.on_connection_event(msg)
 
     def on_log(self, client, userdata, level, buf):
         """
@@ -111,4 +114,4 @@ class MqttComms:
         """
         logging_level = mqtt.LOGGING_LEVEL[level]
         logging.log(logging_level, buf)
-        self.msg_listener.on_message(buf)
+        self.msg_listener.on_connection_event(buf)
