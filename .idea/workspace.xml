@@ -199,8 +199,8 @@
     </list>
     <recent_temporary>
       <list>
-        <item itemvalue="Python.lolevel_mqtt_2" />
         <item itemvalue="Python.th_event_validity_main" />
+        <item itemvalue="Python.lolevel_mqtt_2" />
         <item itemvalue="Python tests.pytest in test_db_streamer.py" />
         <item itemvalue="Python tests.pytest for test_caesar.test_it" />
         <item itemvalue="Python.grab_data_2" />
@@ -224,7 +224,7 @@
       <workItem from="1602118750207" duration="16000" />
       <workItem from="1602118794660" duration="3243000" />
       <workItem from="1602287761890" duration="52390000" />
-      <workItem from="1603641356972" duration="20585000" />
+      <workItem from="1603641356972" duration="21408000" />
     </task>
     <task id="LOCAL-00001" summary="Initial commit to local repo">
       <created>1601740426621</created>
@@ -366,7 +366,14 @@
       <option name="project" value="LOCAL" />
       <updated>1604262051952</updated>
     </task>
-    <option name="localTasksCounter" value="21" />
+    <task id="LOCAL-00021" summary="Add run config for the validity checker">
+      <created>1604277080306</created>
+      <option name="number" value="00021" />
+      <option name="presentableId" value="LOCAL-00021" />
+      <option name="project" value="LOCAL" />
+      <updated>1604277080306</updated>
+    </task>
+    <option name="localTasksCounter" value="22" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -410,7 +417,8 @@
     <MESSAGE value="Add ConnectionEvent table" />
     <MESSAGE value="Send out the log messages from connection" />
     <MESSAGE value="Save the idea files, fed up of losing run configurations made in the branches." />
-    <option name="LAST_COMMIT_MESSAGE" value="Save the idea files, fed up of losing run configurations made in the branches." />
+    <MESSAGE value="Add run config for the validity checker" />
+    <option name="LAST_COMMIT_MESSAGE" value="Add run config for the validity checker" />
   </component>
   <component name="WindowStateProjectService">
     <state x="540" y="214" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1604277014921">
@@ -457,22 +465,22 @@
       <screen x="0" y="23" width="2560" height="1373" />
     </state>
     <state x="557" y="363" key="Github.UntrackedFilesDialog/0.23.2560.1373@0.23.2560.1373" timestamp="1601739432372" />
-    <state width="1640" height="256" key="GridCell.Tab.0.bottom" timestamp="1604277018046">
+    <state width="1640" height="256" key="GridCell.Tab.0.bottom" timestamp="1604365018690">
       <screen x="0" y="23" width="2560" height="1373" />
     </state>
-    <state width="1640" height="256" key="GridCell.Tab.0.bottom/0.23.2560.1373@0.23.2560.1373" timestamp="1604277018046" />
-    <state width="1640" height="256" key="GridCell.Tab.0.center" timestamp="1604277018046">
+    <state width="1640" height="256" key="GridCell.Tab.0.bottom/0.23.2560.1373@0.23.2560.1373" timestamp="1604365018690" />
+    <state width="1640" height="256" key="GridCell.Tab.0.center" timestamp="1604365018689">
       <screen x="0" y="23" width="2560" height="1373" />
     </state>
-    <state width="1640" height="256" key="GridCell.Tab.0.center/0.23.2560.1373@0.23.2560.1373" timestamp="1604277018046" />
-    <state width="1640" height="256" key="GridCell.Tab.0.left" timestamp="1604277018045">
+    <state width="1640" height="256" key="GridCell.Tab.0.center/0.23.2560.1373@0.23.2560.1373" timestamp="1604365018689" />
+    <state width="1640" height="256" key="GridCell.Tab.0.left" timestamp="1604365018688">
       <screen x="0" y="23" width="2560" height="1373" />
     </state>
-    <state width="1640" height="256" key="GridCell.Tab.0.left/0.23.2560.1373@0.23.2560.1373" timestamp="1604277018045" />
-    <state width="1640" height="256" key="GridCell.Tab.0.right" timestamp="1604277018046">
+    <state width="1640" height="256" key="GridCell.Tab.0.left/0.23.2560.1373@0.23.2560.1373" timestamp="1604365018688" />
+    <state width="1640" height="256" key="GridCell.Tab.0.right" timestamp="1604365018689">
       <screen x="0" y="23" width="2560" height="1373" />
     </state>
-    <state width="1640" height="256" key="GridCell.Tab.0.right/0.23.2560.1373@0.23.2560.1373" timestamp="1604277018046" />
+    <state width="1640" height="256" key="GridCell.Tab.0.right/0.23.2560.1373@0.23.2560.1373" timestamp="1604365018689" />
     <state width="1384" height="414" key="GridCell.Tab.1.bottom" timestamp="1603570879097">
       <screen x="0" y="23" width="2560" height="1373" />
     </state>
@@ -497,10 +505,10 @@
       <screen x="0" y="23" width="2560" height="1373" />
     </state>
     <state x="227" y="177" key="SettingsEditor/0.23.2560.1373@0.23.2560.1373" timestamp="1603569903660" />
-    <state x="333" y="375" key="Vcs.Push.Dialog.v2" timestamp="1604262054560">
+    <state x="333" y="375" key="Vcs.Push.Dialog.v2" timestamp="1604277117521">
       <screen x="0" y="23" width="2560" height="1373" />
     </state>
-    <state x="333" y="375" key="Vcs.Push.Dialog.v2/0.23.2560.1373@0.23.2560.1373" timestamp="1604262054560" />
+    <state x="333" y="375" key="Vcs.Push.Dialog.v2/0.23.2560.1373@0.23.2560.1373" timestamp="1604277117521" />
     <state x="943" y="133" width="586" height="490" key="find.popup" timestamp="1604174330612">
       <screen x="0" y="23" width="2560" height="1373" />
     </state>
@@ -518,14 +526,14 @@
     <SUITE FILE_PATH="coverage/ttn_explore$lolevel_mqtt_1.coverage" NAME="lolevel_mqtt_1 Coverage Results" MODIFIED="1602641166624" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/sensors" />
     <SUITE FILE_PATH="coverage/ttn_explore$pytest_in_test_th_sensor_msg_py.coverage" NAME="pytest in test_th_sensor_msg.py Coverage Results" MODIFIED="1602517431561" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/ttn$grab_data.coverage" NAME="grab_data_1 Coverage Results" MODIFIED="1600818800414" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/sensors" />
-    <SUITE FILE_PATH="coverage/ttn_explore$th_event_validity_main.coverage" NAME="th_event_validity_main Coverage Results" MODIFIED="1604277018035" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/sensors" />
+    <SUITE FILE_PATH="coverage/ttn_explore$th_event_validity_main.coverage" NAME="th_event_validity_main Coverage Results" MODIFIED="1604365018673" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/sensors" />
     <SUITE FILE_PATH="coverage/ttn$grab_data_2.coverage" NAME="grab_data_2 Coverage Results" MODIFIED="1600858605241" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/sensors" />
     <SUITE FILE_PATH="coverage/ttn_explore$pytest_for_test_caesar_test_it.coverage" NAME="pytest for test_caesar.test_it Coverage Results" MODIFIED="1602952808515" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/ttn_explore$grab_data_2.coverage" NAME="grab_data_2 Coverage Results" MODIFIED="1602717849809" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/sensors" />
     <SUITE FILE_PATH="coverage/ttn_explore$pytest_for_test_db_streamer_test_db_connection_event.coverage" NAME="pytest for test_db_streamer.test_db_connection_event Coverage Results" MODIFIED="1604178669489" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/ttn_explore$pytest_for_test_db_streamer_test_db_models.coverage" NAME="pytest for test_db_streamer.test_db_models Coverage Results" MODIFIED="1603655488081" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/ttn_explore$pytest_in_test_db_streamer_py.coverage" NAME="pytest in test_db_streamer.py Coverage Results" MODIFIED="1604178660416" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
-    <SUITE FILE_PATH="coverage/ttn_explore$lolevel_mqtt_2.coverage" NAME="lolevel_mqtt_2 Coverage Results" MODIFIED="1604263127798" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/sensors" />
+    <SUITE FILE_PATH="coverage/ttn_explore$lolevel_mqtt_2.coverage" NAME="lolevel_mqtt_2 Coverage Results" MODIFIED="1604277047825" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/src/sensors" />
     <SUITE FILE_PATH="coverage/ttn_explore$pytest_for_test_th_sensor_msg_test_invalid_enum_value.coverage" NAME="pytest for test_th_sensor_msg.test_invalid_enum_value Coverage Results" MODIFIED="1602518593657" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/ttn_explore$pytest_in_test_date_utils_py.coverage" NAME="pytest in test_date_utils.py Coverage Results" MODIFIED="1602381737194" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
     <SUITE FILE_PATH="coverage/ttn_explore$pytest_for_test_db_streamer_test_on_message.coverage" NAME="pytest for test_db_streamer.test_on_message Coverage Results" MODIFIED="1603655868144" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/tests" />
