@@ -41,7 +41,7 @@ Base = declarative_base()
 
 class ConnectEnum(Enum):
     CONNECTED = 1
-    SOCKER_ERROR = 2
+    SOCKET_ERROR = 2
     GENERIC = 3
 
 
