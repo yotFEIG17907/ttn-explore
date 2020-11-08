@@ -96,8 +96,8 @@ def main():
                     start_good_run = event
                 mru_event = event
         all_connection_events = session.query(ConnectionEvent).all()
-        for con_event in all_connection_events:
-            logger.info(con_event)
+    #    for con_event in all_connection_events:
+    #        logger.info(con_event)
 
     finally:
         session.close()
