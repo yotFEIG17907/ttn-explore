@@ -14,6 +14,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from models import models
 from models.models import Base
 from sensors.db_streamer import Streamer
 from sensors.mqtt_comms import MqttComms
@@ -89,7 +90,7 @@ def main():
     db_url = args.db_url
     logger.info(f"Database URL for the ORM {db_url}")
     engine = create_engine(db_url, echo=sql_logging_on)
-    Base.metadata.create_all(engine)
+    models.Base.metadata.create_all(engine)
     session_factory = sessionmaker(bind=engine)
 
     streamer = Streamer(session_factory)
