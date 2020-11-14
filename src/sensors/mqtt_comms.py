@@ -1,5 +1,6 @@
 """
 A class to wrap dealing with the MQTT broker
+Background reading: http://www.steves-internet-guide.com/into-mqtt-python-client/
 """
 import logging
 from abc import ABC, abstractmethod
@@ -38,6 +39,7 @@ class MqttComms:
     hostname: str
     ssl_port: int
     msg_listener: SensorListener
+    qos: int # The desired quality of service
 
     def __init__(self,
                  cert_path: str,
@@ -47,11 +49,13 @@ class MqttComms:
                  port: int,
                  msg_listener: SensorListener = None):
         client_id = "kam-th-lora-10132020"
+        # Clean session = False is to attempt to make a persistent subscriber
         self.client = mqtt.Client(client_id=client_id, protocol=mqtt.MQTTv311, clean_session=False)
         # Connect the client's callback functions to the methods in this class
         self.client.on_connect = self.on_connect
         self.client.on_message = self.on_message
         self.client.on_log = self.on_log
+        self.client.on_subscribe = self.on_subscribe
         # See if leaving this as is will improve the re-connection
         self.client.on_disconnect = self.on_disconnect
         self.client.username_pw_set(username=username, password=password)
@@ -60,6 +64,7 @@ class MqttComms:
         self.ssl_port = port
         self.msg_listener = msg_listener
         self.logger = logging.getLogger("lora.mqtt")
+        self.qos = 1 # At least once
 
     def connect_and_start(self, keep_alive_seconds: int):
         self.client.connect(host=self.hostname, port=self.ssl_port, keepalive=keep_alive_seconds)
@@ -82,16 +87,28 @@ class MqttComms:
         self.logger.info("Connected with result code " + str(rc) + " " + mqtt.connack_string(rc))
         if rc == 0:
             # subscribe for all devices of user
-            res = client.subscribe('+/devices/+/up')
+            topic = '+/devices/+/up'
+            res = client.subscribe(topic, qos=self.qos)
             if res[0] != mqtt.MQTT_ERR_SUCCESS:
                 raise RuntimeError(f"Subscribe failed, the client is not really connected {res[0]}")
-            msg = "Subscribed to messages for all devices"
+            msg = f"Subscribed to messages for all devices {topic} returned mid {res[1]}"
             self.logger.info(msg)
             self.msg_listener.on_connection_event(msg)
         else:
             msg = f"Connection failed {str(rc)} {mqtt.connack_string(rc)}"
             self.msg_listener.on_connection_event(msg)
             raise RuntimeError(msg)
+
+    def on_subscribe(self, client, userdata, mid, granted_qos):
+        '''
+        Callback for the subscribe call
+        :param client:
+        :param userdata:
+        :param mid: Message id that was returned in the subscribe call
+        :param granted_qos: The QOS that was granted to the subscriber
+        :return: None
+        '''
+        self.logger.info(f"Subscribed mid {mid} Granted QOS {granted_qos}")
 
     # The callback for when a PUBLISH message is received from the server.
     def on_message(self, client, userdata, msg: mqtt.MQTTMessage):
