@@ -94,7 +94,6 @@ def test_db_models():
     finally:
         session.close()
 
-
 def test_db_connection_event():
     # This will test creation and retrieval of a ConnectionEvent
     # Use an in-memory database to test

@@ -30,6 +30,7 @@ class SensorListener(ABC):
         """
         pass
 
+
 class MqttComms:
     """
     A class that wraps the MQTT client and is an interface between
@@ -39,7 +40,7 @@ class MqttComms:
     hostname: str
     ssl_port: int
     msg_listener: SensorListener
-    qos: int # The desired quality of service
+    qos: int  # The desired quality of service
 
     def __init__(self,
                  cert_path: str,
@@ -64,7 +65,7 @@ class MqttComms:
         self.ssl_port = port
         self.msg_listener = msg_listener
         self.logger = logging.getLogger("lora.mqtt")
-        self.qos = 1 # At least once
+        self.qos = 1  # At least once
 
     def connect_and_start(self, keep_alive_seconds: int):
         self.client.connect(host=self.hostname, port=self.ssl_port, keepalive=keep_alive_seconds)

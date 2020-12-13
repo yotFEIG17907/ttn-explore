@@ -77,11 +77,12 @@ def main():
         for sensor in all_sensors:
             logger.info(sensor)
             all_th_events = sensor.events.order_by(
-                LoraEvent.counter).all()  # type: List[LoraEvent]
+                LoraEvent.timestamp).all()  # type: List[LoraEvent]
             logger.info(f"  There are {len(all_th_events)} events")
-            logger.info(f"  Lowest Counter {all_th_events[0].counter} Latest Counter {all_th_events[-1].counter}")
-            logger.info(f"  First time {formatiso8601(all_th_events[0].timestamp)}" \
-                        f"  Last time {formatiso8601(all_th_events[-1].timestamp)}")
+            logger.info(f"  Earliest time {formatiso8601(all_th_events[0].timestamp)}" \
+                        f"  Latest time {formatiso8601(all_th_events[-1].timestamp)}")
+            logger.info(f"  Counter for earliest event {all_th_events[0].counter} "
+                        f"Counter for latest event {all_th_events[-1].counter}")
             # Look for gaps
             mru_event = all_th_events[0]
             start_good_run = mru_event
@@ -90,7 +91,7 @@ def main():
                     gap = event.counter - mru_event.counter
                     good_run = mru_event.counter - start_good_run.counter
                     logger.warning(
-                        f"Gap {gap} > 1 Run before this gap {good_run}, "\
+                        f"Gap {gap} > 1 Run before this gap {good_run}, " \
                         f"{mru_event.counter} / {formatiso8601(mru_event.timestamp)}" \
                         f" {event.counter} / {formatiso8601(event.timestamp)}")
                     start_good_run = event

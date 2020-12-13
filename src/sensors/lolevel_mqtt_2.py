@@ -15,7 +15,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from models import models
-from models.models import Base
 from sensors.db_streamer import Streamer
 from sensors.mqtt_comms import MqttComms
 
